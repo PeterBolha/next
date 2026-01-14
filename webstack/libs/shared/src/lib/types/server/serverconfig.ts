@@ -115,7 +115,7 @@ export interface AuthConfiguration {
   sessionSecret: string;
 
   // List of login strategies: guest, google, jwt, cilogon, ...
-  strategies: ('google' | 'cilogon' | 'guest' | 'jwt')[];
+  strategies: ('google' | 'cilogon' | "einfra" | 'guest' | 'jwt')[];
 
   // Admin users
   admins: string[];

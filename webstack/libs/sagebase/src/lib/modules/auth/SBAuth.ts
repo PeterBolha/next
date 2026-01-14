@@ -27,6 +27,8 @@ import {
   SBAuthGuestConfig,
   passportCILogonSetup,
   SBAuthCILogonConfig,
+  passportEinfraSetup,
+  SBAuthEinfraConfig,
   passportSpectatorSetup,
   SBAuthSpectatorConfig,
 } from './adapters/';
@@ -34,13 +36,14 @@ import {
 export type SBAuthConfig = {
   sessionMaxAge: number;
   sessionSecret: string;
-  strategies: ('google' | 'apple' | 'cilogon' | 'guest' | 'jwt' | 'spectator')[];
+  strategies: ('google' | 'apple' | 'cilogon' | 'einfra' | 'guest' | 'jwt' | 'spectator')[];
   production: boolean;
   googleConfig?: SBAuthGoogleConfig;
   appleConfig?: SBAuthAppleConfig;
   jwtConfig?: SBAuthJWTConfig;
   guestConfig?: SBAuthGuestConfig;
   cilogonConfig?: SBAuthCILogonConfig;
+  einfraConfig?: SBAuthEinfraConfig;
   spectatorConfig?: SBAuthSpectatorConfig;
 };
 
@@ -85,13 +88,13 @@ export class SBAuth {
           console.error(`${providerName}> Authentication error:`, err);
           return res.redirect(`/login?error=${providerName}_error&details=` + encodeURIComponent(err.message || 'Unknown error'));
         }
-        
+
         if (!user) {
           console.error(`${providerName}> Authentication failed - no user returned:`, info);
           const details = info?.message || info?.reason || 'No user data received';
           return res.redirect(`/login?error=${providerName}_no_user&details=` + encodeURIComponent(details));
         }
-        
+
         // Log successful authentication with more details
         console.log(`${providerName}> Successful authentication:`, {
           userId: user.id,
@@ -101,21 +104,21 @@ export class SBAuth {
           userAgent: req.get('User-Agent'),
           timestamp: new Date().toISOString()
         });
-        
+
         // Establish user session
         req.logIn(user, (loginErr: any) => {
           if (loginErr) {
             console.error(`${providerName}> Session login error:`, loginErr);
             return res.redirect(`/login?error=${providerName}_login_failed&details=` + encodeURIComponent(loginErr.message || 'Session creation failed'));
           }
-          
+
           console.log(`${providerName}> Session established successfully:`, {
             userId: user.id,
             email: user.email || user.displayName || 'no-email',
             sessionId: req.sessionID,
             timestamp: new Date().toISOString()
           });
-          
+
           return res.redirect('/');
         });
       })(req, res, next);
@@ -164,8 +167,8 @@ export class SBAuth {
         if (passportGoogleSetup(config.googleConfig)) {
           express.get(
             config.googleConfig.routeEndpoint,
-            passport.authenticate('google', { 
-              prompt: 'select_account', 
+            passport.authenticate('google', {
+              prompt: 'select_account',
               scope: ['profile', 'email']
               // Note: State parameter validation handled by passport strategy
             })
@@ -214,8 +217,8 @@ export class SBAuth {
         if (ready) {
           express.get(
             config.cilogonConfig.routeEndpoint,
-            passport.authenticate('openidconnect', { 
-              prompt: 'consent', 
+            passport.authenticate('openidconnect', {
+              prompt: 'consent',
               scope: ['openid', 'email', 'profile']
               // Note: State parameter validation handled by OpenID Connect strategy
             })
@@ -223,6 +226,25 @@ export class SBAuth {
           express.get(
             config.cilogonConfig.callbackURL,
             this.createOAuthCallbackHandler('cilogon', 'openidconnect')
+          );
+        }
+      }
+
+      // Einfra Setup
+      if (config.strategies.includes('einfra') && config.einfraConfig) {
+        const ready = await passportEinfraSetup(config.einfraConfig);
+        if (ready) {
+          express.get(
+            config.einfraConfig.routeEndpoint,
+            passport.authenticate('openidconnect-einfra', {
+              prompt: 'consent',
+              scope: ['openid', 'email', 'profile']
+              // Note: State parameter validation handled by OpenID Connect strategy
+            })
+          );
+          express.get(
+            config.einfraConfig.callbackURL,
+            this.createOAuthCallbackHandler('einfra', 'openidconnect-einfra')
           );
         }
       }

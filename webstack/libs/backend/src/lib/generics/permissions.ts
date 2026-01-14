@@ -27,6 +27,7 @@ const providerToRoleMap = {
   cilogon: 'user',
   google: 'user',
   apple: 'user',
+  einfra: 'user',
   jwt: 'user',
   spectator: 'spectator',
   guest: 'guest',

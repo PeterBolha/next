@@ -33,6 +33,14 @@ function ciLogin(): void {
 }
 
 /**
+ * Endpoint to login with Einfra
+ */
+function einfraLogin(): void {
+  // return to host with the same protocol (http/https)
+  window.location.replace(`${window.location.protocol}//${window.location.host}/auth/einfra`);
+}
+
+/**
  * Endpoint to login with Apple
  */
 function appleLogin(): void {
@@ -118,6 +126,7 @@ type AuthenticatedType = {
   googleLogin: () => void;
   appleLogin: () => void;
   ciLogin: () => void;
+  einfraLogin: () => void;
   guestLogin: () => Promise<void>;
   spectatorLogin: () => Promise<void>;
 };
@@ -140,6 +149,7 @@ export function AuthProvider(props: React.PropsWithChildren<Record<string, unkno
     googleLogin,
     appleLogin,
     ciLogin,
+    einfraLogin,
     guestLogin,
     spectatorLogin,
   });
@@ -157,11 +167,12 @@ export function AuthProvider(props: React.PropsWithChildren<Record<string, unkno
           googleLogin,
           appleLogin,
           ciLogin,
+          einfraLogin,
           guestLogin,
           spectatorLogin,
         });
       } else {
-        setAuth({ auth: null, verify, loading: false, expire: 0, logout, googleLogin, appleLogin, ciLogin, guestLogin, spectatorLogin });
+        setAuth({ auth: null, verify, loading: false, expire: 0, logout, googleLogin, appleLogin, ciLogin, einfraLogin, guestLogin, spectatorLogin });
       }
     }
 

@@ -17,19 +17,20 @@ import { isElectron, useAuth, useRouteNav, GetServerInfo } from '@sage3/frontend
 
 // Logos
 import cilogonLogo from '../../../assets/cilogon.png';
+import einfraLogo from '../../../assets/einfra_logo.png';
 
 /**
  * Login page with authentication options and board context handling
  */
 export function LoginPage() {
-  const { auth, googleLogin, appleLogin, ciLogin, guestLogin, spectatorLogin, loading: authLoading } = useAuth();
+  const { auth, googleLogin, appleLogin, ciLogin, einfraLogin, guestLogin, spectatorLogin, loading: authLoading } = useAuth();
   const { toCreateUser } = useRouteNav();
   const toast = useToast();
-  
+
   const [serverName, setServerName] = useState<string>('');
   const [shouldDisable, setShouldDisable] = useState(false);
   const [logins, setLogins] = useState<string[]>([]);
-  
+
   const logoUrl = '/assets/sage3_banner.webp';
   const thisIsElectron = isElectron();
 
@@ -39,7 +40,7 @@ export function LoginPage() {
   const getReturnToUrl = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const returnTo = urlParams.get('returnTo');
-    
+
     // Validate returnTo URL to prevent open redirects
     if (returnTo) {
       if (returnTo.startsWith('/') && !returnTo.includes('://')) {
@@ -55,15 +56,15 @@ export function LoginPage() {
   const getSavedBoardContext = () => {
     try {
       const savedContext = localStorage.getItem('sage3_pending_board');
-      
+
       if (savedContext) {
         const context = JSON.parse(savedContext);
         console.log('Board Context: Retrieved from localStorage:', context);
-        
+
         // Check if context is not too old (24 hours)
         const isRecent = Date.now() - context.timestamp < 24 * 60 * 60 * 1000;
         const age = Date.now() - context.timestamp;
-        
+
         if (isRecent && context.roomId && context.boardId) {
           console.log(`Board Context: Valid context found (age: ${Math.round(age / 1000)}s)`);
           return context;
@@ -88,7 +89,7 @@ export function LoginPage() {
   const preserveBoardContext = useCallback(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const returnTo = urlParams.get('returnTo');
-    
+
     // Check if returnTo contains board information
     if (returnTo && returnTo.includes('/board/')) {
       const boardMatch = returnTo.match(/\/board\/([^\/]+)\/([^\/]+)/);
@@ -101,7 +102,7 @@ export function LoginPage() {
           url: window.location.href,
           source: 'login_returnTo'
         };
-        
+
         try {
           localStorage.setItem('sage3_pending_board', JSON.stringify(boardContext));
           console.log('Board Context: Preserved from returnTo parameter:', boardContext);
@@ -265,7 +266,7 @@ export function LoginPage() {
 
     if (auth) {
       console.log('Auth Success: Authentication present, redirecting to account creation/validation');
-      
+
       // Check for saved board context first to preserve it
       const savedContext = getSavedBoardContext();
       if (savedContext) {
@@ -376,6 +377,21 @@ export function LoginPage() {
             />
             <Button width="100%" isDisabled={shouldDisable || !logins.includes('cilogon')} justifyContent="left" onClick={ciLogin}>
               Login with CILogon
+            </Button>
+          </ButtonGroup>
+
+          {/* Einfra Auth Service */}
+          <ButtonGroup isAttached size="lg" width="100%">
+            <IconButton
+              width="80px"
+              aria-label="Login with Einfra"
+              icon={<Image w="36px" h="36px" src={einfraLogo} alt="Einfra Logo" />}
+              pointerEvents="none"
+              borderRight={`3px solid`}
+              borderColor={colorMode === 'light' ? 'gray.50' : 'gray.800'}
+            />
+            <Button width="100%" isDisabled={shouldDisable || !logins.includes('einfra')} justifyContent="left" onClick={einfraLogin}>
+              Login with Einfra
             </Button>
           </ButtonGroup>
 
